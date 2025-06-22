@@ -46,11 +46,11 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		lineNum++
 		line := scanner.Text()
 
-		splits := strings.Split(line, ";")
-		if len(splits) < 2 {
+		sepIdx := strings.Index(line, ";")
+		if sepIdx == -1 {
 			return nil, fmt.Errorf("invalid format at line %v: %q", lineNum, line)
 		}
-		name, valStr := splits[0], splits[1]
+		name, valStr := line[:sepIdx], line[sepIdx+1:]
 
 		valX10, err := strconv.Atoi(
 			strings.Replace(valStr, ".", "", 1), // removing dot = value*10
