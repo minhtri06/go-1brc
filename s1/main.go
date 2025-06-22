@@ -5,10 +5,7 @@ import (
 	"time"
 )
 
-const (
-	inputFile  = "../measurements.txt"
-	outputFile = "output.txt"
-)
+const inputFile = "../measurements.txt"
 
 func main() {
 	start := time.Now()
