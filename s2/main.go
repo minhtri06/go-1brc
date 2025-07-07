@@ -12,8 +12,6 @@ import (
 
 const inputFile = "../measurements.txt"
 
-// This solution is like s1, but instead of Scanning a line into text we scan it into bytes
-
 func main() {
 	f, err := os.Create("cpu.prof")
 	if err != nil {
@@ -33,9 +31,12 @@ func main() {
 }
 
 type Aggregation struct {
-	Min    float64
-	Mean   float64
-	Max    float64
+	Min  float64
+	Mean float64
+	Max  float64
+
+	MinX10 int
+	MaxX10 int
 	SumX10 int64
 	Count  int64
 }
@@ -71,22 +72,20 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		a, ok := agg[name]
 		if !ok {
 			a = &Aggregation{
-				Min: math.MaxFloat64,
-				Max: -math.MaxFloat64,
+				MinX10: math.MaxInt,
+				MaxX10: math.MinInt,
 			}
 			agg[name] = a
 		}
 
+		if valX10 > a.MaxX10 {
+			a.MaxX10 = valX10
+		}
+		if valX10 < a.MinX10 {
+			a.MinX10 = valX10
+		}
 		a.SumX10 += int64(valX10)
 		a.Count++
-
-		val := float64(valX10) / 10
-		if val > a.Max {
-			a.Max = val
-		}
-		if val < a.Min {
-			a.Min = val
-		}
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -95,6 +94,8 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 
 	for _, stationAgg := range agg {
 		stationAgg.Mean = float64(stationAgg.SumX10) / float64(stationAgg.Count) / 10
+		stationAgg.Min = float64(stationAgg.MinX10) / 10
+		stationAgg.Max = float64(stationAgg.MaxX10) / 10
 	}
 
 	return agg, nil
