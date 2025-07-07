@@ -1,3 +1,5 @@
 output.txt
 measurements.txt
 .vscode
+.DS_Store
+cpu.prof

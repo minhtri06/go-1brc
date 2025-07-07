@@ -4,23 +4,29 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime/pprof"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const inputFile = "../measurements.txt"
 
 func main() {
-	start := time.Now()
-
-	_, err := aggregate(inputFile)
+	f, err := os.Create("cpu.prof")
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("cannot create prof file: %w", err))
 	}
+	defer f.Close()
 
-	elapsed := time.Since(start)
-	fmt.Println("aggregate() took:", elapsed)
+	if err := pprof.StartCPUProfile(f); err != nil {
+		panic(fmt.Errorf("cannot start CPU profile: %w", err))
+	}
+	defer pprof.StopCPUProfile()
+
+	_, err = aggregate(inputFile)
+	if err != nil {
+		panic(fmt.Errorf("aggregate failed: %w", err))
+	}
 }
 
 type Aggregation struct {
