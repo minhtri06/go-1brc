@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	writeresult "github.com/minhtri06/1brc/write_result"
+	"github.com/minhtri06/1brc/writeresult"
 )
 
 func TestAggregate(t *testing.T) {
