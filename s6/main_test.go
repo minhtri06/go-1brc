@@ -20,7 +20,7 @@ func TestAggregate(t *testing.T) {
 
 	// Convert agg to map[string]string for writeresult.ToFile
 	res := make(map[string]string)
-	for k, v := range agg {
+	for k, v := range agg.toMap() {
 		res[k] = fmt.Sprintf("%.1f/%.1f/%.1f", v.Min, v.Mean, v.Max)
 	}
 

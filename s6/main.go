@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"runtime/pprof"
 )
@@ -41,14 +40,14 @@ type Aggregation struct {
 	sumX10 int
 }
 
-func aggregate(inputFile string) (map[string]*Aggregation, error) {
+func aggregate(inputFile string) (*customMap, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
 	defer file.Close()
 
-	agg := make(map[string]*Aggregation, 1000)
+	agg := NewCustomMap()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -57,14 +56,17 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		name, valX10 := extractNameValueX10(line)
 		val := float64(valX10) / 10
 
-		a, ok := agg[string(name)]
-		if !ok {
-			agg[string(name)] = &Aggregation{
-				Min:    val,
-				Max:    val,
-				sumX10: valX10,
-				count:  1,
-			}
+		a, exists := agg.get(name)
+		if !exists {
+			agg.set(
+				name,
+				&Aggregation{
+					Min:    val,
+					Max:    val,
+					sumX10: valX10,
+					count:  1,
+				},
+			)
 		} else {
 			a.Max = max(a.Max, val)
 			a.Min = min(a.Min, val)
@@ -77,68 +79,11 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		return nil, fmt.Errorf("failed to scan file %w", err)
 	}
 
-	for _, a := range agg {
+	agg.forEach(func(key []byte, a *Aggregation) {
 		a.Mean = float64(a.sumX10) / float64(a.count) / 10
-	}
+	})
 
 	return agg, nil
-}
-
-type Scanner struct {
-	r              io.Reader
-	buf            []byte
-	pos            int
-	end            int
-	err            error
-	station        []byte
-	temperatureX10 int
-	done           bool
-}
-
-func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{
-		r:   r,
-		buf: make([]byte, 0, 1024*1024), // 1MB buffer
-	}
-}
-
-func (s *Scanner) Scan() bool {
-	if s.done {
-		return false
-	}
-
-	s.station = nil
-	s.temperatureX10 = 0
-
-	for ; s.pos < s.end; s.pos++ {
-		if s.buf[s.pos] == ';' {
-			s.station = s.buf[:s.pos]
-			s.pos++
-			break
-		}
-	}
-
-	negative := false
-	for ; s.pos < s.end; s.pos++ {
-		if s.buf[s.pos] == '-' {
-			negative = true
-			continue
-		}
-		if s.buf[s.pos] == '.' {
-			continue
-		}
-		if s.buf[s.pos] == '\n' {
-			s.done = true
-			s.pos++
-			break
-		}
-		if s.buf[s.pos] == '\r' {
-			s.pos++ 
-			if s.pos < s.end && s.buf[s.pos] == '\n' {
-			s.done = true
-			break
-		}
-	}
 }
 
 func extractNameValueX10(line []byte) (name []byte, valX10 int) {
