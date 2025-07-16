@@ -20,7 +20,7 @@ type customMap struct {
 	size    int
 }
 
-func NewCustomMap() *customMap {
+func newCustomMap() *customMap {
 	return &customMap{}
 }
 

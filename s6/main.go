@@ -9,9 +9,7 @@ import (
 
 const inputFile = "../measurements.txt"
 
-// 1. Combine calculating value and separating name/value into one operation.
-// 2. When get value from the map, instead of agg[name] (name is string), we use agg[string(name)] (name is []byte).
-//    This makes a big improvement.
+// This solution uses a custom map implementation to aggregate measurements.
 
 func main() {
 	f, err := os.Create("cpu.prof")
@@ -47,7 +45,7 @@ func aggregate(inputFile string) (*customMap, error) {
 	}
 	defer file.Close()
 
-	agg := NewCustomMap()
+	agg := newCustomMap()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -79,7 +77,7 @@ func aggregate(inputFile string) (*customMap, error) {
 		return nil, fmt.Errorf("failed to scan file %w", err)
 	}
 
-	agg.forEach(func(key []byte, a *Aggregation) {
+	agg.forEach(func(k []byte, a *Aggregation) {
 		a.Mean = float64(a.sumX10) / float64(a.count) / 10
 	})
 
