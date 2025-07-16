@@ -75,13 +75,13 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 				min:    val,
 				mean:   val,
 				max:    val,
-				sumX10: int64(valX10),
+				sumX10: valX10,
 				count:  1,
 			}
 		} else {
 			a.min = min(a.min, val)
 			a.max = max(a.max, val)
-			a.sumX10 += int64(valX10)
+			a.sumX10 += valX10
 			a.count++
 		}
 	}
