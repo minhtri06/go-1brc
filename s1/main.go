@@ -9,7 +9,19 @@ import (
 	"strings"
 )
 
+// This solution is idiomatic and simple.
+// It doesn't assume the file format to be valid, if the file is malformed, just return an error.
+
 const inputFile = "../measurements.txt"
+
+type Aggregation struct {
+	min  float64
+	mean float64
+	max  float64
+
+	sum   float64
+	count int
+}
 
 func main() {
 	f, err := os.Create("cpu.prof")
@@ -27,14 +39,6 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("aggregate failed: %w", err))
 	}
-}
-
-type Aggregation struct {
-	Min    float64
-	Mean   float64
-	Max    float64
-	SumX10 int64
-	Count  int64
 }
 
 func aggregate(inputFile string) (map[string]*Aggregation, error) {
@@ -58,39 +62,33 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		}
 		name, valStr := line[:sepIdx], line[sepIdx+1:]
 
-		valX10, err := strconv.Atoi(
-			strings.Replace(valStr, ".", "", 1), // removing dot = value*10
-		)
+		val, err := strconv.ParseFloat(valStr, 64)
 		if err != nil {
 			return nil, fmt.Errorf("invalid value at line %v: %w", lineNum, err)
 		}
-		val := float64(valX10) / 10
 
 		a, ok := agg[name]
 		if !ok {
-			a = &Aggregation{
-				Min: val,
-				Max: val,
+			agg[name] = &Aggregation{
+				min:   val,
+				max:   val,
+				sum:   val,
+				count: 1,
 			}
-			agg[name] = a
+		} else {
+			a.min = min(a.min, val)
+			a.max = max(a.max, val)
+			a.sum += val
+			a.count++
 		}
-
-		if val > a.Max {
-			a.Max = val
-		}
-		if val < a.Min {
-			a.Min = val
-		}
-		a.SumX10 += int64(valX10)
-		a.Count++
 	}
 
 	if err := scanner.Err(); err != nil {
 		return nil, fmt.Errorf("failed to scan file %w", err)
 	}
 
-	for _, stationAgg := range agg {
-		stationAgg.Mean = float64(stationAgg.SumX10) / float64(stationAgg.Count) / 10
+	for _, a := range agg {
+		a.mean = a.sum / float64(a.count)
 	}
 
 	return agg, nil
