@@ -7,11 +7,12 @@ import (
 	"runtime/pprof"
 )
 
-const inputFile = "../measurements.txt"
+// This solution adds two improvements to solution 4:
+// 1. Combine calculating value and separating name/value into one operation -> Reduce bytes traversal.
+// 2. Instead of define an intermediate variable for map keys `name := string(bName)`, we directly use
+//    `string(name)` when accessing the map -> Reduce the overhead of creating an intermediate variable.
 
-// 1. Combine calculating value and separating name/value into one operation.
-// 2. When get value from the map, instead of agg[name] (name is string), we use agg[string(name)] (name is []byte).
-//    This makes a big improvement.
+const inputFile = "../measurements.txt"
 
 func main() {
 	f, err := os.Create("cpu.prof")
@@ -32,9 +33,9 @@ func main() {
 }
 
 type Aggregation struct {
-	Min  float64
-	Mean float64
-	Max  float64
+	min  float64
+	mean float64
+	max  float64
 
 	count  int32
 	sumX10 int
@@ -59,14 +60,14 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 		a, ok := agg[string(name)]
 		if !ok {
 			agg[string(name)] = &Aggregation{
-				Min:    val,
-				Max:    val,
+				min:    val,
+				max:    val,
 				sumX10: valX10,
 				count:  1,
 			}
 		} else {
-			a.Max = max(a.Max, val)
-			a.Min = min(a.Min, val)
+			a.max = max(a.max, val)
+			a.min = min(a.min, val)
 			a.sumX10 += valX10
 			a.count++
 		}
@@ -77,7 +78,7 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 	}
 
 	for _, a := range agg {
-		a.Mean = float64(a.sumX10) / float64(a.count) / 10
+		a.mean = float64(a.sumX10) / float64(a.count) / 10
 	}
 
 	return agg, nil
