@@ -8,6 +8,16 @@ import (
 	"runtime/pprof"
 )
 
+// In this solution, we remove the bufio.Scanner and native map and combine the logic of them
+// into a big single loop.
+//
+// With bufio.Scanner + native map, we have to traverse the line twice:
+// 1. First is to find the newline character and get the line.
+// 2. Second, we traverse the line again to process the name and value.
+//
+// And with this solution, we only traverse the line once.
+// Also, it assumes the input file to be valid and contains less than 10,000 distinct station names.
+
 const (
 	inputFile = "../measurements.txt"
 	bufSize   = 1024 * 1024 // 1 MB buffer size
