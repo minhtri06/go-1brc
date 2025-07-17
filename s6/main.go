@@ -7,9 +7,10 @@ import (
 	"runtime/pprof"
 )
 
-const inputFile = "../measurements.txt"
-
 // This solution uses a custom map implementation to aggregate measurements.
+// It assumes the input file to be valid and contains less than 10,000 distinct station names.
+
+const inputFile = "../measurements.txt"
 
 func main() {
 	f, err := os.Create("cpu.prof")
@@ -30,9 +31,9 @@ func main() {
 }
 
 type Aggregation struct {
-	Min  float64
-	Mean float64
-	Max  float64
+	min  float64
+	mean float64
+	max  float64
 
 	count  int32
 	sumX10 int
@@ -59,15 +60,15 @@ func aggregate(inputFile string) (*customMap, error) {
 			agg.set(
 				name,
 				&Aggregation{
-					Min:    val,
-					Max:    val,
+					min:    val,
+					max:    val,
 					sumX10: valX10,
 					count:  1,
 				},
 			)
 		} else {
-			a.Max = max(a.Max, val)
-			a.Min = min(a.Min, val)
+			a.max = max(a.max, val)
+			a.min = min(a.min, val)
 			a.sumX10 += valX10
 			a.count++
 		}
@@ -78,7 +79,7 @@ func aggregate(inputFile string) (*customMap, error) {
 	}
 
 	agg.forEach(func(k []byte, a *Aggregation) {
-		a.Mean = float64(a.sumX10) / float64(a.count) / 10
+		a.mean = float64(a.sumX10) / float64(a.count) / 10
 	})
 
 	return agg, nil

@@ -11,6 +11,8 @@ import (
 // 1. Combine calculating value and separating name/value into one operation -> Reduce bytes traversal.
 // 2. Instead of define an intermediate variable for map keys `name := string(bName)`, we directly use
 //    `string(name)` when accessing the map -> Reduce the overhead of creating an intermediate variable.
+//
+// This solution assumes the input file to be valid.
 
 const inputFile = "../measurements.txt"
 
