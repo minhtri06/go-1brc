@@ -69,6 +69,7 @@ func aggregate(inputFile string) ([]*Entry, error) {
 
 	// Custom map
 	m := make([]*Entry, mapSize)
+	size := 0
 	// Custom Scanner to read the file
 	buf := make([]byte, bufSize)
 	readStart := 0
@@ -128,7 +129,10 @@ func aggregate(inputFile string) ([]*Entry, error) {
 						value: &Aggregation{Min: val, Max: val, sumX10: valX10, count: 1},
 					}
 					copy(m[bucket].name, name)
-					// todo: add size of the map
+					size++
+					if size >= maxLoad {
+						panic("custom map exceeded maximum load factor")
+					}
 					break
 				}
 				if bytes.Equal(e.name, name) {
