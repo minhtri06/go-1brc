@@ -8,7 +8,7 @@ import (
 	"runtime/pprof"
 )
 
-// This solution is same as solution 2, but instead of using bytes.Cut, I separate name and value
+// This solution is same as solution 2, but I separate name and value
 // by iterating the line in reverse order to find the separator ';'.
 // Take a look at separateNameValue function.
 
