@@ -52,16 +52,17 @@ func aggregate(inputFile string) (map[string]*Aggregation, error) {
 	agg := map[string]*Aggregation{}
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
-	sep := []byte(";")
 
 	for scanner.Scan() {
 		lineNum++
 		line := scanner.Bytes()
 
-		bName, bVal, found := bytes.Cut(line, sep)
-		if !found {
-			return nil, fmt.Errorf("could not find name-value separator at line %v: %q", lineNum, line)
+		newlineIdx := bytes.IndexByte(line, ';')
+		if newlineIdx == -1 {
+			return nil, fmt.Errorf("could not find name-value separator")
 		}
+
+		bName, bVal := line[:newlineIdx], line[newlineIdx+1:]
 
 		name := string(bName)
 
