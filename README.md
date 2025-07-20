@@ -51,4 +51,4 @@ This repository contains 9 different solutions with progressive optimizations.
 | **s6**   | 38.66s         | Custom hash map implementation with FNV-1a hashing                                             |
 | **s7**   | 20.69s         | Single-pass file processing - removed `bufio.Scanner`, custom buffered reading                 |
 | **s8**   | 25.02s         | Parallel processing with file chunking (based on s2 with concurrency)                          |
-| **s9**   | 7.94s          | Combines parallel processing + custom map + single-pass reading (based on s7 with concurrency) |
+| **s9**   | 8.06s          | Combines parallel processing + custom map + single-pass reading (based on s7 with concurrency) |

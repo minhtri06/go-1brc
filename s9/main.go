@@ -63,50 +63,29 @@ func Aggregate(filename string) (map[string]*Aggregation, error) {
 	}
 	defer f.Close()
 
-	stat, err := f.Stat()
-	if err != nil {
-		return nil, fmt.Errorf("cannot get file stats: %w", err)
+	numWorkers := runtime.NumCPU() // Number of readers, set as the number of CPU cores
+	if numWorkers < 1 {
+		numWorkers = 16
 	}
-	size := stat.Size()
 
-	nReaders := runtime.NumCPU() // Number of readers, set as the number of CPU cores
-	chunkSize := size/int64(nReaders) + 1
+	FileParts, err := splitsFile(inputFile, numWorkers)
+	if err != nil {
+		return nil, fmt.Errorf("cannot spit file: %w", err)
+	}
 
 	type result struct {
 		entries []*Entry
 		err     error
 	}
-	resCh := make(chan *result, nReaders+1)
+	resCh := make(chan *result, numWorkers+1)
 
 	go func() {
 		defer close(resCh)
 
 		var wg sync.WaitGroup
 
-		for offset := int64(0); offset < size; {
-			length := chunkSize
-			f.Seek(offset+length, io.SeekStart)
-
-			// Set length to reach the next newline character
-			buf := make([]byte, 32)
-			for {
-				n, err := f.Read(buf)
-				if err != nil && err != io.EOF {
-					resCh <- &result{nil, fmt.Errorf("failed to read file: %w", err)}
-				}
-				if n == 0 {
-					break
-				}
-				newlineIdx := bytes.LastIndexByte(buf[:n], '\n')
-				if newlineIdx != -1 {
-					length += int64(newlineIdx) + 1 // Include the newline character
-					break
-				}
-				length += int64(n)
-			}
-
-			r := io.NewSectionReader(f, offset, length)
-			offset += length
+		for _, part := range FileParts {
+			r := io.NewSectionReader(f, part.offset, part.length)
 
 			wg.Add(1)
 			go func(r io.Reader) {
