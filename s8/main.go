@@ -51,58 +51,34 @@ func Aggregate(inputFile string) (map[string]*Aggregation, error) {
 	}
 	defer file.Close()
 
-	stat, err := file.Stat()
+	numWorkers := runtime.NumCPU()
+	if numWorkers < 1 {
+		numWorkers = 16
+	}
+
+	fileParts, err := splitsFile(inputFile, numWorkers)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get file stat: %w", err)
+		return nil, fmt.Errorf("cannot split file: %w", err)
 	}
-	size := stat.Size()
-
-	numReader := runtime.NumCPU()
-	if numReader < 1 {
-		numReader = 16
-	}
-
-	chunkSize := size/int64(numReader) + 1
 
 	type result struct {
 		agg map[string]*Aggregation
 		err error
 	}
-	resCh := make(chan *result, numReader+1)
+	resCh := make(chan *result, len(fileParts))
 
 	go func() {
-		var wg sync.WaitGroup
-
 		defer close(resCh)
 
-		for offset := int64(0); offset < size; {
-			length := chunkSize
-			file.Seek(offset+length, io.SeekStart)
+		var wg sync.WaitGroup
 
-			// Set length to the next newline character
-			buf := make([]byte, 32)
-			for {
-				n, err := file.Read(buf)
-				if err != nil && err != io.EOF {
-					resCh <- &result{nil, fmt.Errorf("failed to read file: %w", err)}
-				}
-				if n == 0 {
-					break
-				}
-				newlineIdx := bytes.IndexByte(buf[:n], '\n')
-				if newlineIdx != -1 {
-					length += int64(newlineIdx) + 1 // Include the newline character
-					break
-				}
-				length += int64(n)
-			}
-
-			r := io.NewSectionReader(file, offset, length)
-			offset += length
+		for _, part := range fileParts {
+			r := io.NewSectionReader(file, part.offset, part.length)
 
 			wg.Add(1)
 			go func(r io.Reader) {
 				defer wg.Done()
+
 				agg, err := aggregate(r)
 				if err != nil {
 					resCh <- &result{nil, fmt.Errorf("failed to aggregate: %w", err)}
@@ -143,23 +119,22 @@ func Aggregate(inputFile string) (map[string]*Aggregation, error) {
 func aggregate(r io.Reader) (map[string]*Aggregation, error) {
 	agg := map[string]*Aggregation{}
 	scanner := bufio.NewScanner(r)
-	lineNum := 0
-	sep := []byte(";")
 
 	for scanner.Scan() {
-		lineNum++
 		line := scanner.Bytes()
 
-		bName, bVal, found := bytes.Cut(line, sep)
-		if !found {
-			return nil, fmt.Errorf("could not find name-value separator at line %v: %q", lineNum, line)
+		newlineIdx := bytes.IndexByte(line, ';')
+		if newlineIdx == -1 {
+			return nil, fmt.Errorf("could not find separator in line")
 		}
+
+		bName, bVal := line[:newlineIdx], line[newlineIdx+1:]
 
 		name := string(bName)
 
 		valX10, err := evaluateValX10(bVal)
 		if err != nil {
-			return nil, fmt.Errorf("invalid value at line %v: %w", lineNum, err)
+			return nil, fmt.Errorf("invalid value '%v': %w", string(bVal), err)
 		}
 		val := float64(valX10) / 10
 

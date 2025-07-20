@@ -45,10 +45,10 @@ This repository contains 9 different solutions with progressive optimizations.
 | -------- | -------------- | ---------------------------------------------------------------------------------------------- |
 | **s1**   | 74.04s         | Baseline implementation - idiomatic Go with `bufio.Scanner` and `strings.Split()`              |
 | **s2**   | 59.42s         | Bytes processing + integer arithmetic (sumX10) instead of floating point                       |
-| **s3**   | 56.09s         | Custom separator parsing - reverse iteration to find ';'                                       |
+| **s3**   | 54.09s         | Custom separator parsing - reverse iteration to find ';'                                       |
 | **s4**   | 53.08s         | Pre-allocated map with initial capacity to reduce rehashing                                    |
 | **s5**   | 40.89s         | Combined name/value parsing + direct map access with `string(name)`                            |
 | **s6**   | 38.66s         | Custom hash map implementation with FNV-1a hashing                                             |
 | **s7**   | 20.69s         | Single-pass file processing - removed `bufio.Scanner`, custom buffered reading                 |
-| **s8**   | 26.09s         | Parallel processing with file chunking (based on s2 with concurrency)                          |
+| **s8**   | 25.02s         | Parallel processing with file chunking (based on s2 with concurrency)                          |
 | **s9**   | 7.94s          | Combines parallel processing + custom map + single-pass reading (based on s7 with concurrency) |
