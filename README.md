@@ -33,7 +33,7 @@ For more details please take a look at the [origin repo](https://github.com/gunn
 
 ## How can I generate the file?
 
-To generate the file, they use their provided Java program to generate a random dataset. You can check [this section](https://github.com/gunnarmorling/1brc?tab=readme-ov-file#running-the-challenge) for more details.
+To generate the file, they use a provided Java program to generate a random dataset. You can check [this section](https://github.com/gunnarmorling/1brc?tab=readme-ov-file#running-the-challenge) for more details.
 
 ## Solutions Statistics
 
@@ -43,12 +43,12 @@ This repository contains 9 different solutions with progressive optimizations.
 
 | Solution | Execution Time | Key Optimizations                                                                              |
 | -------- | -------------- | ---------------------------------------------------------------------------------------------- |
-| **s1**   | 74.04s         | Baseline implementation - idiomatic Go with `bufio.Scanner` and `strings.Split()`              |
-| **s2**   | 59.42s         | Bytes processing + integer arithmetic (sumX10) instead of floating point                       |
-| **s3**   | 54.09s         | Custom separator parsing - reverse iteration to find ';'                                       |
-| **s4**   | 53.08s         | Pre-allocated map with initial capacity to reduce rehashing                                    |
-| **s5**   | 40.89s         | Combined name/value parsing + direct map access with `string(name)`                            |
-| **s6**   | 38.66s         | Custom hash map implementation with FNV-1a hashing                                             |
-| **s7**   | 20.69s         | Single-pass file processing - removed `bufio.Scanner`, custom buffered reading                 |
-| **s8**   | 25.02s         | Parallel processing with file chunking (based on s2 with concurrency)                          |
-| **s9**   | 8.06s          | Combines parallel processing + custom map + single-pass reading (based on s7 with concurrency) |
+| s1       | 74.04s         | Baseline implementation - idiomatic Go with `bufio.Scanner` and `strings.Split()`              |
+| s2       | 59.42s         | Bytes processing + integer arithmetic (sumX10) instead of floating point                       |
+| s3       | 54.09s         | Custom separator parsing - reverse iteration to find ';'                                       |
+| s4       | 53.08s         | Pre-allocated map with initial capacity to reduce rehashing                                    |
+| s5       | 40.89s         | Combined name/value parsing + direct map access with `string(name)`                            |
+| s6       | 38.66s         | Custom hash map implementation with FNV-1a hashing                                             |
+| s7       | 20.69s         | Single-pass file processing - removed `bufio.Scanner`, custom buffered reading                 |
+| s8       | 25.02s         | Parallel processing with file chunking (based on s2 with concurrency)                          |
+| s9       | 8.06s          | Combines parallel processing + custom map + single-pass reading (based on s7 with concurrency) |
